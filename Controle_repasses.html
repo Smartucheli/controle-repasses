@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Repasses</title>
+<meta name="theme-color" content="#0F6E56">
+<meta name="description" content="Controle local de repasses e histórico mensal">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root{
+    --bg: #F4F2ED;
+    --card: #FFFFFF;
+    --ink: #1F2A24;
+    --ink-soft: #5B6660;
+    --line: #E1DDD2;
+    --accent: #0F6E56;
+    --accent-soft: #E1F5EE;
+    --accent-dark: #04342C;
+    --danger: #A32D2D;
+    --danger-soft: #FCEBEB;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap{
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 90px;
+  }
+  header{ padding: 8px 4px 16px; }
+  header h1{ font-size: 21px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.2px; }
+  header p{ font-size: 13px; color: var(--ink-soft); margin: 0; }
+
+  .tabs{
+    display:flex;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 18px;
+  }
+  .tab-btn{
+    flex:1;
+    border:none;
+    background: transparent;
+    padding: 10px 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-radius: 9px;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background: var(--accent);
+    color:#fff;
+  }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  label{
+    display:block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .field{ margin-bottom: 14px; }
+  input[type=text], input[type=number], select{
+    width: 100%;
+    height: 46px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #FBFAF7;
+    padding: 0 12px;
+    font-size: 16px;
+    color: var(--ink);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input:focus, select:focus{ border-color: var(--accent); background: #fff; }
+  .valor-row{ display:flex; gap: 10px; }
+  .valor-row .field{ flex:1; margin-bottom:0; }
+  .pct-box{
+    flex: 1;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .pct-box .pct-label{ font-size: 11px; font-weight: 600; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+  .pct-box .pct-value{ font-size: 19px; font-weight: 700; color: var(--accent-dark); }
+  button.primary{
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  button.primary:active{ opacity: 0.85; }
+  .error{
+    font-size: 12.5px;
+    color: var(--danger);
+    margin-top: -8px;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .error.show{ display:block; }
+  .totais{ display:flex; gap: 10px; margin-bottom: 16px; }
+  .stat{
+    flex:1;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .stat .lbl{ font-size: 11.5px; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+  .stat .val{ font-size: 18px; font-weight: 700; }
+  .stat.accent .val{ color: var(--accent); }
+  .stat.small .val{ font-size: 15px; }
+  .section-title{
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 6px 0 10px 2px;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+  }
+  .section-title a{
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor:pointer;
+    text-decoration:none;
+  }
+  .registro{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 14px;
+    margin-bottom: 10px;
+  }
+  .registro-top{ display:flex; justify-content: space-between; align-items:flex-start; gap: 8px; }
+  .registro .nome{ font-size: 15.5px; font-weight: 600; margin: 0 0 2px; }
+  .registro .proc{ font-size: 13px; color: var(--ink-soft); margin:0; }
+  .registro .data{ font-size: 11.5px; color: var(--ink-soft); margin: 2px 0 0; }
+  .del-btn{
+    border: none;
+    background: var(--danger-soft);
+    color: var(--danger);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .registro-bottom{
+    display:flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
+  .registro-bottom .item .k{ font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.3px; }
+  .registro-bottom .item .v{ font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .registro-bottom .item.pct .v{ color: var(--accent); }
+  .empty{ text-align:center; padding: 30px 10px; color: var(--ink-soft); font-size: 13.5px; }
+  .loading{ text-align:center; padding: 20px; color: var(--ink-soft); font-size: 13px; }
+  .info-box{
+    background: var(--accent-soft);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--accent-dark);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Controle de repasses</h1>
+    <p>Paciente, procedimento e cálculo automático de 35%</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="registrar">Registrar</button>
+    <button class="tab-btn" data-tab="historico">Histórico por mês</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-registrar">
+    <div class="card">
+      <div class="field">
+        <label for="nome">Nome do paciente</label>
+        <input type="text" id="nome" placeholder="Ex: Maria Silva">
+      </div>
+      <div class="field">
+        <label for="proc">Procedimento</label>
+        <input type="text" id="proc" placeholder="Ex: Consulta de retorno">
+      </div>
+      <div class="valor-row">
+        <div class="field">
+          <label for="valor">Valor pago (R$)</label>
+          <input type="number" id="valor" inputmode="decimal" placeholder="0,00" step="0.01">
+        </div>
+        <div class="pct-box">
+          <div class="pct-label">35%</div>
+          <div class="pct-value" id="pctPreview">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="error" id="formError">Preencha nome, procedimento e valor pago.</div>
+      <button class="primary" id="saveBtn">Salvar registro</button>
+    </div>
+
+    <div class="section-title">
+      <span>Registros recentes</span>
+      <a id="verTodosLink">ver histórico &rarr;</a>
+    </div>
+    <div id="recentesContainer"><div class="loading">Carregando registros...</div></div>
+  </div>
+
+  <div class="tab-panel" id="tab-historico">
+    <div class="card">
+      <div class="field" style="margin-bottom:0;">
+        <label for="mesSelect">Selecionar mês</label>
+        <select id="mesSelect"></select>
+      </div>
+    </div>
+
+    <div class="totais">
+      <div class="stat">
+        <div class="lbl">Total pago</div>
+        <div class="val" id="mesTotalPago">R$ 0,00</div>
+      </div>
+      <div class="stat accent">
+        <div class="lbl">Total 35%</div>
+        <div class="val" id="mesTotalPct">R$ 0,00</div>
+      </div>
+      <div class="stat small">
+        <div class="lbl">Registros</div>
+        <div class="val" id="mesQtd">0</div>
+      </div>
+    </div>
+
+    <div class="section-title"><span>Registros do mês</span></div>
+    <div id="historicoContainer"><div class="loading">Carregando registros...</div></div>
+  </div>
+</div>
+
+<script>
+function formatBRL(n){
+  return n.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function monthKey(ts){
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function monthLabel(key){
+  const [y,m] = key.split('-').map(Number);
+  return MESES[m-1] + ' de ' + y;
+}
+function formatDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR');
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+const nomeEl = document.getElementById('nome');
+const procEl = document.getElementById('proc');
+const valorEl = document.getElementById('valor');
+const pctPreview = document.getElementById('pctPreview');
+const saveBtn = document.getElementById('saveBtn');
+const formError = document.getElementById('formError');
+const recentesContainer = document.getElementById('recentesContainer');
+const historicoContainer = document.getElementById('historicoContainer');
+const mesSelect = document.getElementById('mesSelect');
+const mesTotalPago = document.getElementById('mesTotalPago');
+const mesTotalPct = document.getElementById('mesTotalPct');
+const mesQtd = document.getElementById('mesQtd');
+const verTodosLink = document.getElementById('verTodosLink');
+
+let registros = [];
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
+});
+verTodosLink.addEventListener('click', () => switchTab('historico'));
+
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if(name === 'historico') renderHistorico();
+}
+
+function updatePreview(){
+  const v = parseFloat(valorEl.value.replace(',', '.'));
+  const pct = isNaN(v) ? 0 : v * 0.35;
+  pctPreview.textContent = formatBRL(pct);
+}
+valorEl.addEventListener('input', updatePreview);
+
+async function loadRegistros(){
+  try{
+    const saved = localStorage.getItem('registros');
+    registros = saved ? JSON.parse(saved) : [];
+  }catch(e){
+    registros = [];
+  }
+  renderRecentes();
+  populateMesSelect();
+}
+
+async function persist(){
+  try{
+    localStorage.setItem('registros', JSON.stringify(registros));
+  }catch(e){
+    console.error('Erro ao salvar', e);
+  }
+}
+
+function registroCardHtml(r, showDate){
+  return `
+    <div class="registro" data-id="${r.id}">
+      <div class="registro-top">
+        <div>
+          <p class="nome">${escapeHtml(r.nome)}</p>
+          <p class="proc">${escapeHtml(r.procedimento)}</p>
+          ${showDate ? `<p class="data">${formatDate(r.criadoEm)}</p>` : ''}
+        </div>
+        <button class="del-btn" data-del="${r.id}" aria-label="Excluir registro">&#10005;</button>
+      </div>
+      <div class="registro-bottom">
+        <div class="item">
+          <div class="k">Valor pago</div>
+          <div class="v">${formatBRL(r.valor)}</div>
+        </div>
+        <div class="item pct">
+          <div class="k">35%</div>
+          <div class="v">${formatBRL(r.valor * 0.35)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bindDeleteButtons(container){
+  container.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-del');
+      registros = registros.filter(r => r.id !== id);
+      await persist();
+      renderRecentes();
+      populateMesSelect();
+      renderHistorico();
+    });
+  });
+}
+
+function renderRecentes(){
+  if(registros.length === 0){
+    recentesContainer.innerHTML = '<div class="empty">Nenhum registro ainda. Preencha o formulário acima para começar.</div>';
+    return;
+  }
+  const sorted = [...registros].sort((a,b) => b.criadoEm - a.criadoEm).slice(0, 5);
+  recentesContainer.innerHTML = sorted.map(r => registroCardHtml(r, false)).join('');
+  bindDeleteButtons(recentesContainer);
+}
+
+function populateMesSelect(){
+  const keysSet = new Set(registros.map(r => monthKey(r.criadoEm)));
+  const currentKey = monthKey(Date.now());
+  keysSet.add(currentKey);
+  const keys = [...keysSet].sort().reverse();
+  const previousValue = mesSelect.value;
+  mesSelect.innerHTML = keys.map(k => `<option value="${k}">${monthLabel(k)}</option>`).join('');
+  mesSelect.value = keys.includes(previousValue) ? previousValue : currentKey;
+}
+mesSelect.addEventListener('change', renderHistorico);
+
+function renderHistorico(){
+  const key = mesSelect.value || monthKey(Date.now());
+  const doMes = registros.filter(r => monthKey(r.criadoEm) === key);
+  const totalPago = doMes.reduce((s,r) => s + r.valor, 0);
+  const totalPct = totalPago * 0.35;
+  mesTotalPago.textContent = formatBRL(totalPago);
+  mesTotalPct.textContent = formatBRL(totalPct);
+  mesQtd.textContent = doMes.length;
+
+  if(doMes.length === 0){
+    historicoContainer.innerHTML = '<div class="empty">Nenhum registro neste mês.</div>';
+    return;
+  }
+  const sorted = [...doMes].sort((a,b) => b.criadoEm - a.criadoEm);
+  historicoContainer.innerHTML = sorted.map(r => registroCardHtml(r, true)).join('');
+  bindDeleteButtons(historicoContainer);
+}
+
+saveBtn.addEventListener('click', async () => {
+  const nome = nomeEl.value.trim();
+  const proc = procEl.value.trim();
+  const valor = parseFloat(valorEl.value.replace(',', '.'));
+
+  if(!nome || !proc || isNaN(valor) || valor <= 0){
+    formError.classList.add('show');
+    return;
+  }
+  formError.classList.remove('show');
+
+  registros.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    nome,
+    procedimento: proc,
+    valor,
+    criadoEm: Date.now()
+  });
+
+  await persist();
+  renderRecentes();
+  populateMesSelect();
+
+  nomeEl.value = '';
+  procEl.value = '';
+  valorEl.value = '';
+  pctPreview.textContent = formatBRL(0);
+  nomeEl.focus();
+});
+
+[nomeEl, procEl].forEach(el => {
+  el.addEventListener('input', () => formError.classList.remove('show'));
+});
+
+loadRegistros();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
+}
+</script>
+</body>
+</html>

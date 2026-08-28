@@ -1,0 +1,19 @@
+{
+  "name": "Controle de Repasses",
+  "short_name": "Repasses",
+  "description": "Controle local de repasses e histórico mensal",
+  "lang": "pt-BR",
+  "start_url": "./Controle_repasses.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F2ED",
+  "theme_color": "#0F6E56",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
